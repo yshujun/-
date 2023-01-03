@@ -1,0 +1,58 @@
+﻿body {
+  margin:0px;
+  background-image:none;
+  position:relative;
+  left:0px;
+  width:493px;
+  margin-left:auto;
+  margin-right:auto;
+  text-align:left;
+}
+.form_sketch {
+  border-color:transparent;
+  background-color:transparent;
+}
+#base {
+  position:absolute;
+  z-index:0;
+}
+#u5664_img {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:493px;
+  height:687px;
+}
+#u5664 {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:0px;
+  width:493px;
+  height:687px;
+  display:flex;
+}
+#u5664 .text {
+  position:absolute;
+  align-self:center;
+  padding:2px 2px 2px 2px;
+  box-sizing:border-box;
+  width:100%;
+}
+#u5664_text {
+  border-width:0px;
+  word-wrap:break-word;
+  text-transform:none;
+  visibility:hidden;
+}
+#u5665 {
+  border-width:0px;
+  position:absolute;
+  left:0px;
+  top:1px;
+  width:100px;
+  height:52px;
+  overflow:hidden;
+  background-image:url('../../resources/images/transparent.gif');
+}

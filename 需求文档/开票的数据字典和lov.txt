@@ -1,0 +1,4 @@
+数据字典：
+开具发票种类： INVOICE_TYPE
+
+lov：
