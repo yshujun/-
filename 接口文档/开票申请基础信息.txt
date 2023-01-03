@@ -1,0 +1,148 @@
+@Id
+@GeneratedValue(generator="SNOWID")
+@JsonSerialize(using=ToStringSerializer.class)
+private Long id; //主键
+
+@NotEmpty
+@Length(max = 24)
+private String invoiceNo; //开票申请单号
+
+@Length(max = 24)
+private String srSoaNo; //应收对账单号
+
+@NotEmpty
+@Length(max = 20)
+private String dataSource; //数据来源
+
+@Transient
+private String dataSourceName;//数据来源 名称
+
+@Length(max = 40)
+private String soaOrgMcode; //开票主体申请组织
+
+@Transient
+private String soaOrgMcodeName; //申请组织名称
+
+@DateTimeFormat(pattern = "yyyy-MM-dd")
+@JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+private Date soaDate; //申请日期
+
+@Length(max = 40)
+private String deliverDepartmentMcode; //送交部门
+
+private BigDecimal totalInvoicedAmount; //开票总金额
+
+@NotEmpty
+@Length(max = 40)
+private String soaPerson; //申请人
+
+@Length(max = 40)
+private String soaDepartmentMcode; //申请部门
+
+@Length(max = 128)
+private String soaKsMcode; //申请科室
+
+@Length(max = 32)
+private String contractNo; //合同号
+
+@Length(max = 128)
+private String taxAccountant; //税务会计
+
+@Length(max = 1)
+private String covBillType; //开具发票种类(原发票类型)
+
+@Transient
+private String covBillTypeName;    //开具发票种类名称
+
+@Length(max = 1)
+private String invoiceType; //发票类型(暂手工填入)
+
+@Transient
+private String invoiceTypeName;    //发票类型名称
+
+@Length(max = 32)
+private String customerCode; //对方单位编码
+
+@Length(max = 16)
+private String customerPhone; //对方单位电话
+
+@Length(max = 80)
+private String customerAddress; //对方单位开票地址
+
+@Length(max = 32)
+private String customerBankDeposit; //对方单位开户银行
+
+@Length(max = 40)
+private String customerBankAccounts; //对方单位开户银行账号
+
+@Length(max = 20)
+private String customerCreditCode; //对方单位税号
+
+@Length(max = 512)
+private String applyExplain; //申请说明
+
+@Length(max = 512)
+private String remarkExplain; //发票备注栏说明
+
+@Length(max = 512)
+private String invoiceNumber; //发票号
+
+@Length(max = 2)
+private String status; //状态
+
+@Transient
+private String statusName; //状态名称
+
+@Length(max = 1)
+private String isPushNcc; //是否已推NCC
+
+@Length(max = 32)
+private String voucherNum; //凭证号
+
+private Date voucherAccountDate; //凭证记账日期
+
+private Date approvedDate; //审核通过日期
+
+@Length(max = 40)
+private String canPerson; //作废操作人
+
+@Transient
+private String canPersonName; //作废操作人
+
+@DateTimeFormat(pattern = "yyyy-MM-dd")
+@JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+private Date canDate; //作废时间
+
+@Length(max = 512)
+private String canRemark; //作废备注
+
+@Transient
+private String soaKsMcodeName; //申请科室名称
+
+@Transient
+private String soaPersonName; //申请人名称
+
+@Transient
+private String soaPersonCode;//申请人编码
+
+@Transient
+private String employeeCode;//申请人工号
+
+@Transient
+private Date applyDateFrom;    //申请日期起
+
+@Transient
+private Date applyDateTo;    //申请日期止
+
+@Transient
+private String soaDepartmentName;    //申请部门
+
+@Transient
+private String deliverDepartmentName;    //送交部门
+
+@Transient
+private String customerName;    //对方单位名称
+
+@Transient
+private List<SrInvoiceApplyDetail> srInvoiceApplyDetail
+加载更多

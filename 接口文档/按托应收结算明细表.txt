@@ -1,0 +1,114 @@
+
+/**
+ * 按托应收结算明细表
+ *
+ * @author zkr-yyh
+ * @date 2022/9/14
+ **/
+@ExtensionAttribute(disable=true)
+@ExtensionBaseEnabled(disable=false)
+@Table(name = "t_sr_settle_consignment")
+public class SrSettleConsignment extends ExtensionBaseDto {
+
+
+
+    @Id
+    @GeneratedValue(generator="SNOWID")
+    @JsonSerialize(using=ToStringSerializer.class)
+    private Long id; //主键
+
+    @Length(max = 16)
+    private String dataSource; //数据来源
+
+    @Length(max = 24)
+    private String srEstNo; //应收暂估编号
+
+    @Length(max = 24)
+    private String srStatementsNo; //应收对账单编号
+
+    @Length(max = 40)
+    private String orgMcode; //公司编号
+
+    @Length(max = 40)
+    private String useDepartmentMcode; //部门编号
+
+    @Length(max = 40)
+    private String useKsMcode; //科室编号
+
+    @Length(max = 32)
+    private String contractCode; //合同编号
+
+    @Length(max = 32)
+    private String customerCode; //客户代码
+
+    private Long costTypeId; //收支项目ID
+
+    @Length(max = 6)
+    private String businessMonth; //业务月份
+
+    private Date businessDate; //业务日期
+
+    @Length(max = 16)
+    private String projectCode; //业务项目代码
+
+    @Length(max = 4)
+    private String costDimension; //费用维度
+
+    @Length(max = 16)
+    private String productSmallClass; //产品小类
+
+    @Length(max = 16)
+    private String customerBrand; //客户品牌
+
+    @Length(max = 32)
+    private String shipmentNo; //运单编号
+
+    @Length(max = 128)
+    private String shipmentLine; //运单线路
+
+    @Length(max = 128)
+    private String contractLine; //合同线路
+
+    @Length(max = 32)
+    private String vehicleNo; //车牌号
+
+    @Length(max = 64)
+    private String vehicleModel; //车型名称
+
+    private Long driver; //司机数量
+
+    @Length(max = 128)
+    private String accountingItems; //核算项目名称
+
+    private Date departureDate; //运单发运时间
+
+    private Long goNum; //去程数量
+
+    private Long backNum; //返程数量
+
+    private Long goPrice; //去程单价（不含税）
+
+    private Long backPrice; //返程单价（不含税）
+
+    private Long otherFee; //其他费用（不含税）
+
+    @Length(max = 2000)
+    private String otherFeeDesc; //其他费用说明
+
+    private Long noTaxSettleAmount; //不含税结算总金额
+
+    private Long taxRate; //税率
+
+    private Long taxSettleAmount; //含税结算总金额
+
+    @Length(max = 2)
+    private String settleType; //结算类型
+
+    @Length(max = 2)
+    private String settleMethod; //结算方式
+
+    @Length(max = 2)
+    private String status; //状态
+
+    @Length(max = 512)
+    private String remark; //备注

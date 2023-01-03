@@ -1,0 +1,43 @@
+    @Id
+    @GeneratedValue(generator="SNOWID")
+    @JsonSerialize(using=ToStringSerializer.class)
+    private Long id; //主键
+
+//    @Length(max = 255)
+    private Long applyDetailId; //开票申请明细ID
+
+    @Length(max = 128)
+    private String invoiceNo; //开票申请单号
+
+    @Length(max = 128)
+    private String taxType; //税目种类
+
+    @Length(max = 128)
+    private String taxTypeName; //税目种类
+
+    @Length(max = 32)
+    private String unit; //单位
+
+    private Long taxRate; //税率（%）
+
+    private Long price; //单价(不含税)
+
+    private Long quantity; //数量
+
+    private Long tax; //税额
+
+    private Long totalNoTaxAmount; //总金额（不含税）
+
+    private Long totalTaxAmount; //总金额（含税）
+
+    private Long actNoTaxAmount; //实际开票金额(不含税)
+
+    private Long actTaxAmount; //实际开票金额  (含税)
+
+    private Long actTax; //实际开票金额(税额)
+
+    @Length(max = 200)
+    private String remark; //备注
+
+    @Transient
+    private CodeValue codeValue;    // 税目种类数据字典

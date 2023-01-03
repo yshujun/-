@@ -1,0 +1,81 @@
+@Id
+@GeneratedValue(generator="SNOWID")
+@JsonSerialize(using=ToStringSerializer.class)
+private Long id; //主键
+
+@NotEmpty
+@Length(max = 24)
+private String invoiceNo; //开票申请单号
+
+@Length(max = 24)
+private String srSoaNo; //应收对账单号
+
+@Length(max = 24)
+private String srNo; //暂估应收单号
+
+private Long costTypeId; //收支项目id
+
+@Length(max = 40)
+private String useDepartmentMcode; //报账部门
+
+@Transient
+private String useDepartmentMcodeName; //报账部门名称
+
+@Length(max = 6)
+private String soaMonth; //业务月份
+
+@Length(max = 16)
+private String projectCode; //业务项目
+
+@Length(max = 4)
+private String costDimension; //费用维度
+
+@Transient
+private String costDimensionName; //费用维度名称
+
+@Length(max = 16)
+private String productSmallClass; //产品小类
+
+@Transient
+private String productSmallClassName; //产品小类名称
+
+@Length(max = 16)
+private String customerBrand; //客户品牌
+
+@Transient
+private String customerBrandName; //客户品牌名称
+
+@Length(max = 128)
+private String hetongNumber; //合同编号
+
+@Transient
+private String hetongName; //合同名称
+
+private BigDecimal taxRate; //税率(%)
+
+private BigDecimal taxAmount; //含税金额
+
+private BigDecimal noTaxAmount; //不含税总金额
+
+private BigDecimal tax; //税额
+
+private BigDecimal invoicedAmount; //已开票金额
+
+private BigDecimal noInvoicedAmount; //未开票金额
+
+private BigDecimal thisInvoicedAmount; //本次开票金额
+
+@Length(max = 256)
+private String remark; //备注
+
+@Transient
+private String costTypeName;    //收支项目名称
+
+@Transient
+private String costTypeCode;    //收支项目代码
+
+@Transient
+private String projectName; // 业务项目
+
+@Transient
+private Integer rowNo; // 行号

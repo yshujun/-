@@ -1,0 +1,79 @@
+@Length(max = 50)
+    private String assetName; // 资产名称
+
+    @Length(max = 20)
+    private String assetType; // 资产类别
+
+    @Length(max = 20)
+    private BigDecimal monthDepreciation; // 月折旧金额
+
+    @Length(max = 500)
+    private String scrapReason; // 报废原因
+
+    private Date scrapTime; // 报废日期
+
+    @Length(max = 500)
+    private String mergeReason; // 变动原因
+
+    @Length(max = 500)
+    private String storagePlace; // 存放地点
+
+    @Transient
+    private String orgMcodeName; // 业财组织名称
+
+    @Transient
+    private String deptMcodeName; // 业财部门名称
+
+    @Length(max = 30)
+    private String assetTypeName; //资产类别名称
+
+    @Transient
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    private Date sendDateBefore; //调用日期之前
+
+    @Transient
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    private Date sendDateAfter; //调用日期之后
+
+  /**审核通过日期起*/
+    @Transient
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    private Date businessDateBefore;
+    
+    /**审核通过日期止*/
+    @Transient
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    private Date businessDateAfter;
+
+    /**报废日期起*/
+    @Transient
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    private Date scrapTimeBefore;
+
+    /**报废日期止*/
+    @Transient
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone = "GMT+8")
+    private Date scrapTimeAfter;
+
+    /**月折旧金额起*/
+    private BigDecimal monthDepreciationBefore;
+
+    /**月折旧金额止*/
+    private BigDecimal monthDepreciationAfter;
+
+ private String deptCode; // 业财部门编码
+
+private String orgCode; //业财组织编码
+
+    @Length(max = 32)
+    private String operateSource; //操作来源
+
+private String cardNo; //业财资产卡片编码
+
+private String cardCode; //NCC卡片编号

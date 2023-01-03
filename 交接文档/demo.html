@@ -1,0 +1,727 @@
+<!--
+description: 表格属性方法大全
+version: 2.0
+author: Yuxusheng
+2022年6月2日17点11分
+*
+-->
+<#include "../../include/header.html">
+  <!-- 公共需要复用的方法 -->
+  <script src="${base.contextPath}/resources/js/ycCommon.js"></script>
+  <!-- 系统配置的数据字典（配置方法查看东风物流前端开发文档） -->
+  <script src="${base.contextPath}/common/code?preStatus=PRE_BILLS_STATUS" type="text/javascript"></script>
+  <script type="text/javascript">
+    // 创建视图模型，绑定到grid上
+    let viewModel = Hap.createGridViewModel("#grid",{
+      model: {}
+    });
+  </script>
+
+  <body>
+    <div id="importWin" style="display: none"></div>
+    <div class="page-content">
+      <form class="form-horizontal" id="query-form">
+        <div id="queryPanel">
+          <div class="form-group">
+            <div class="col-sm-3">
+              <label class="control-label col-sm-4">LOV</label>
+              <div class="col-sm-8">
+                <!-- data-bind类似vue的v-model -->
+                <input id="supplierId" data-bind="value:model.supplierCode,text:model.supplierName" />
+              </div>
+              <script>
+                // 绑定到LOV，@lov 后面为系统配置的LOV代码。配置方法查看东风物流前端开发文档
+                $("#supplierId").kendoLov($.extend( <@lov "YC_SUPPLIER_BANK" />, {
+                  dataTextField: 'supplierName', // LOV显示的文本
+                  dataValueField: 'supplierCode', // LOV显示的值
+                  valuePrimitive: true, // 初始化值，默认为true
+                  // 选择LOV里面的数据时候触发
+                  select: function (e) {
+                    /* 这里可以对选择的数据进行操作 */
+                  },
+                  // LOV的查询条件
+                  query: function (e) {
+                    /* 这里可以传参，查需要的数据 */
+                  }
+                }));
+              </script>
+            </div>
+            <div class="col-sm-3">
+              <label class="control-label col-sm-4">数据字典</label>
+              <div class="col-sm-8">
+                <input id="status" data-bind="value:model.preStatus" />
+                <script>
+                  $("#status").kendoComboBox({
+                    dataTextField: "meaning", // 显示的文本字段
+                    dataValueField: "value", // 值的字段
+                    valuePrimitive: true,
+                    dataSource: preStatus, // js文件引入的数据，这里也可以用ajax请求数据
+                    // 数据改变时触发
+                    change: function (e) {
+                      /* 数据改变后进行的操作 */
+                    }
+                  });
+                </script>
+              </div>
+            </div>
+
+            <div class="col-sm-3">
+              <label class="control-label col-sm-4">日期</label>
+              <div class="col-sm-8">
+                <input id="date" data-bind="value:model.date" />
+              </div>
+              <script>
+                $("#date").kendoDatePicker({
+                  format:"yyyy-MM-dd",
+                  interval:"15",
+                  change: function () {
+                  }
+                }).data("kendoDatePicker");
+              </script>
+            </div>
+
+            <div class="col-sm-3">
+              <label class="control-label col-sm-4">正常</label>
+              <div class="col-sm-8">
+                <input id="contractCode" class="k-textbox" data-bind="value:model.contractCode" />
+              </div>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <div class="col-sm-3">
+              <label class="control-label col-sm-4">目的地</label>
+              <div class="col-sm-8">
+                <input id="arrival" class="k-textbox" data-bind="value:model.arrival" style="width: 100%;" />
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <label class="control-label col-sm-4">车牌号</label>
+              <div class="col-sm-8">
+                <input id="waybillNo" type="text" class="k-textbox" data-bind="value:model.waybillNo"/>
+              </div>
+            </div>
+            <div class="col-sm-3">
+              <label class="control-label col-sm-4">合同号</label>
+              <div class="col-sm-8">
+                <input id="contractCode" type="text" class="k-textbox" data-bind="value:model.contractCode"/>
+              </div>
+            </div>
+          </div>
+
+          <!-- 更多查询条件 -->
+          <div class="form-group more" style="display: none">
+            <div class="col-sm-3">
+              <label class="control-label col-sm-4">状态</label>
+              <div class="col-sm-8">
+                <input id="status" class="k-textbox" data-bind="value:model.status" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <script>
+          // 这个相当于vue的双向绑定。
+          kendo.bind($('#query-form'), viewModel);
+        </script>
+
+        <!-- 分隔线 -->
+        <div id="line"></div>
+        <!-- 工具栏 -->
+        <div class="clearfix"></div>
+        <div id="toolbar-btn" class="pull-right" style="padding-bottom:10px;margin-right: 15px">
+          <span class="btn btn-primary" data-bind="click:query" type="submit"><i class="fa fa-search"
+              style="margin-right:3px;"></i>
+            <@spring.message "hap.query" />
+          </span>
+          <span class="btn btn-primary" type="button" data-bind="click:reset"> <i class="fa fa-eraser"
+              style="margin-right:3px;"></i>
+            <@spring.message "hap.reset" />
+          </span>
+          <span class="btn btn-primary" onclick="refreshGrid1()"><i class="fa fa-plus-square"
+            style="margin-right:3px;"></i>刷新表格(调接口)</span>
+          <span class="btn btn-primary" onclick="refreshGrid2()"><i class="fa fa-plus-square"
+            style="margin-right:3px;"></i>刷新表格(不调接口)</span>
+          <span class="btn btn-primary" onclick="selectData()"><i class="fa fa-plus-square"
+            style="margin-right:3px;"></i>单选</span>
+          <span class="btn btn-primary" onclick="selectDatas()"><i class="fa fa-plus-square"
+            style="margin-right:3px;"></i>多选</span>
+          <span class="btn btn-primary" onclick="addRow()"><i class="fa fa-plus-square"
+              style="margin-right:3px;"></i>新增</span>
+          <span class="btn btn-danger" onclick="removeRow()"><i class="fa fa-trash-o"></i>
+            <@spring.message "hap.delete" /></span>
+            <span class="btn btn-primary" onclick="downloadTemp()"><i class="fa fa-arrow-down"
+              style="margin-right:3px;"></i>导入模板下载</span>
+          <span class="btn btn-primary" onclick="save()"><i class="fa fa-plus-square"
+            style="margin-right:3px;"></i>保存</span>
+          <span id="importDate" class="btn btn-primary" onclick="importExcel()"><i class="fa fa-arrow-down"
+              style="margin-right:3px;"></i>导入</span>
+          <span id="importDate" class="btn btn-primary" onclick="exportExcel()"><i class="fa fa-file-excel-o"
+            style="margin-right:3px;"></i>导出</span>
+        </div>
+        <div class="clearfix"></div>
+        <script>kendo.bind($('#toolbar-btn'), viewModel);</script>
+        <!-- 结果列表 -->
+        <div id="grid"></div>
+      </form>
+    </div>
+    <script type="text/javascript">
+
+      // 分割线
+      $("#line").kendoDivideLine({
+        target: ".more",
+        hasIcon: true // 显示分割线右边的箭头图标
+      });
+
+      // 表格加tootlip，第一个参数为绑定的表格,第二个参数为列数
+      Lcp.gridToolTip("#grid", 5);
+      Lcp.gridToolTip("#grid", 4);
+      Lcp.gridToolTip("#grid", 3);
+      Lcp.gridToolTip("#grid", 7);
+    </script>
+    </div>
+
+    <script>
+
+    </script>
+
+    <script type="text/javascript">
+      // 按下回车时查询
+      Hap.initEnterQuery('#query-form', viewModel.query);
+      let BaseUrl = _basePath;
+      dataSource = new kendo.data.DataSource({
+        transport: {
+          read: {
+            // url: BaseUrl + "/t/sp/soa/query/new",
+            url: BaseUrl +'/t/sp/soa/apply/query/new', // 后端接口
+            type: "POST",
+            dataType: "json"
+          },
+          // 下面这三个接口，只有在表格的编辑模式为inline、popup时才会生效
+          update: {
+            url: BaseUrl + "",// 更新接口
+            type: "POST",
+            contentType: "application/json"
+          },
+          destroy: {
+            url: BaseUrl + "",// 删除接口
+            type: "POST",
+            contentType: "application/json"
+          },
+          create: {
+            url: BaseUrl + "",// 报错接口
+            type: "POST",
+            contentType: "application/json"
+          },
+          // 查询参数格式化
+          parameterMap: function (options, type) {
+            if (type !== "read" && options.models) {
+              let datas = Hap.prepareSubmitParameter(options, type)
+              return kendo.stringify(datas);
+            } else if (type === "read") {
+              // 转为json格式
+              return Hap.prepareQueryParameter(viewModel.model.toJSON(), options)
+            }
+          }
+        },
+        batch: true, // 多个接口合并一起发送，默认为true就好了
+        serverPaging: true, // 后端分页，如果是前端分页，就改为false
+        pageSize: 20, // 每页数据
+        // 数据模型配置项
+        schema: {
+          data: 'rows',
+          // 处理后端给的数据格式，如果后端给的数据结构不符合要求，就用这个方法
+          // data: function(response) {
+          //   return response.row.row;
+          // },
+          total: 'total',
+          model: {
+            id: "id",
+            fields: {
+              costTypeCode: {
+                // 校验规则
+                validation: {
+                  required: true, // 必填
+                  min:0
+                },
+                // 数据类型
+                type: "number", // string、boolean、date
+                // 默认值
+                defaultValue: 42,
+              },
+            }
+          }
+        },
+        // 合计，对应的列也需要配置
+        aggregate:[
+          {
+            field: "totalTaxAmount", aggregate: "sum"
+          }
+        ],
+        // 请求前触发
+        requestStart:function(e) {
+          // 阻止请求
+          // e.preventDefault()
+        },
+        // 请求后触发
+        requestEnd:function(e) {
+        }
+      });
+
+
+      $("#grid").kendoGrid({
+        dataSource: dataSource, // 数据源
+        resizable: true, // 自适应
+        navigatable: true, // 分页
+        rownumber: true, // 行序号
+        selectable: 'multiple, rowbox', // 多选
+        // 在表格绑定数据前触发，类似vue的brforeUpdate
+        dataBinding:function() {},
+        // 表格数据发生改变时触发，类似vue生命周期update（不要在这里操作数据，否则会死循环）
+        dataBound: function () {
+          if (parent.autoResizeIframe) {
+            parent.autoResizeIframe('${RequestParameters.functionCode!}')
+          }
+          $(".k-grid-header colgroup").children().eq(0).width("50px");
+          // $(".k-grid-content colgroup").children().eq(0).width("50px");
+          $(".k-grid-content-locked colgroup").children().eq(0).width("50px");
+          $("th").eq(0).text("序号");
+        },
+        // 编辑表格时触发
+        edit:function(e) {},
+        // 编辑完表格，失去焦点触发
+        save:function(e){},
+        // 选中或者取消选中单元格触发
+        change:function(e) {},
+        // 当使用“incell”编辑模式且单元格将被关闭时触发。
+        closeCell:function(e) {},
+        // 点击分页时触发
+        page: function(e) {
+          console.log(e);
+        },
+        // 分页配置
+        pageable: {
+          pageSizes: [5, 10, 20, 50], // 分页大小选项
+          refresh: true, // 刷新数据
+          buttonCount: 5 // 分页按钮个数
+        },
+        // 表格是否可编辑，false时表格全局禁用，如果要禁用某一个单元格用closeCell方法。
+        editable: true, // inline、popup、false
+        // 列配置
+        columns: [
+          {
+            title: '操作',
+            width: 60,
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+            sortable: false, // 排序
+            locked:true, // 锁定列
+            // 自定义模板
+            template:function(e) {
+              let blackColor = "color: #A3A4A6;pointer-events: none;";
+              return '<a href="javascript:void(0);" style="' + blackColor + '">编辑</a>';
+            },
+            // 打开单元格/行进行编辑前触发，可以根据条件决定是否执行editor方法。
+            editable: function(e) {},
+            // 自定义编辑模板，可以绑定LOV、下拉框、日历控件等
+            editor:function(e) {
+              var grid = $("#grid").data("kendoGrid");
+              // 禁止表格输入，单个输入域禁用
+              grid.closeCell();
+              // 刷新表格
+              grid.refresh();
+            }
+          },
+          {
+            field: "spNo",
+            title: '默认',
+            width: 200,
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+          },
+          {
+            field: "soaPersonName",
+            title: '锁定列',
+            width: 200,
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+            locked:true, // 锁定列
+            // hidden:true, // 隐藏列
+            // format: "{0: yyyy-MM-dd HH:mm:ss}", // 格式化(日期)
+            // format: "{0:n2}", // 格式化(数字)
+          },
+          {
+            field: "id",
+            title: '隐藏列',
+            width: 200,
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+            hidden:true, // 隐藏列
+          },
+          {
+            field: "contractName",
+            title: '绑定LOV',
+            width: 200, // vh px rem % (%百分比可以解决样式错乱问题)
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+            // 编辑方法
+            editor: function (container, options) {
+              var input = $('<input name="' + options.field + '" required/>');
+              input.appendTo(container);
+              input.kendoLov($.extend( <@lov "LOV_CONTRACT" />, {
+                textField: 'contractName',
+                value: 'contractCode',
+                valuePrimitive: true,
+                model: options.model,
+              }))
+            }
+          },
+          {
+            field: "d",
+            title: '绑定数字输入框',
+            width: 200,
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+            editor:function (container, options) {
+              var input = $('<input name="' + options.field + '" required/>');
+              input.appendTo(container);
+              input.kendoNumericTextBox({
+                  decimals: 2,
+                  max: 99999999,
+                  min: 0,
+                  spinners: true, // 是否显示上下箭头
+              });
+            }
+          },
+          {
+            field: "status",
+            title: '绑定下拉选择框',
+            width: 200,
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+            editor:function (container, options){
+              $('<input name="'+options.field+'" required>').appendTo(container).kendoComboBox({
+                valuePrimitive: true,
+                dataTextField: "meaning",
+                dataValueField: "value",
+                dataSource:preStatus
+              }).data("kendoComboBox").open();
+            },
+          },
+          {
+            field: "status",
+            title: '格式化数据',
+            width: 200,
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+            // 格式化
+            template:function(dataItem) {
+              if(dataItem.status == 14) {
+                return '未提交'
+              } else {
+                return dataItem.status
+              }
+            },
+            editor:function (container, options){
+              $('<input name="'+options.field+'" required>').appendTo(container).kendoComboBox({
+                valuePrimitive: true,
+                dataTextField: "meaning",
+                dataValueField: "value",
+                dataSource:preStatus
+              }).data("kendoComboBox").open();
+            },
+          },
+          {
+            field: "soaDate",
+            title: '绑定日期',
+            width: 200,
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+            format: "{0:yyyy-MM-dd}",
+            editor: function(container, options){
+              // var opts=
+              $('<input name="' + options.field + '" required/>')
+                .appendTo(container)
+                .kendoDatePicker({
+                  format:"yyyy-MM-dd",
+              })
+            }
+          },
+          {
+            field: "totalTaxAmount",
+            title: '合计',
+            width: 200,
+            headerAttributes: {
+              style: "text-align: center"
+            },
+            attributes: { style: "text-align:center" },
+            aggregates: ["sum"], // 合计
+            footerTemplate: "<div style='text-align: center'>#=kendo.toString(sum,'N2')#</div>",
+          }
+        ],
+      }).data("kendoGrid");
+
+      /* 刷新表格方法起(两种) */
+
+      function refreshGrid1() {
+        var grid = $("#grid").data("kendoGrid");
+        // 刷新并且重新掉接口获取数据
+        grid.dataSource.read()
+      }
+
+      function refreshGrid2() {
+        var grid = $("#grid").data("kendoGrid");
+        // 仅刷新表格
+        grid.refresh();
+      }
+      /* 刷新表格方法止(两种方法) */
+
+
+      /* 选择数据起 */
+      // 单选
+      function selectData() {
+        let grid = $("#grid").data("kendoGrid");
+        // 单选
+        let dataItem = grid.dataItem(grid.select());
+        console.log(dataItem)
+      }
+
+      // 多选
+      function selectDatas() {
+        let grid = $("#grid").data("kendoGrid");
+        let gridList = $("#grid").data("kendoGrid").selectedDataItems();
+        console.log(gridList)
+      }
+      /* 选择数据止 */
+
+
+      /* 新增(三种方法)起 */
+      // 新增行
+      function addRow() {
+        let grid = $("#grid").data("kendoGrid");
+        grid.addRow();
+      }
+
+      // 打开弹窗
+      var inDialog;
+      function openWindows() {
+        // 弹窗页面的路径
+        var url = 'payable_detail_purchase.html?status=in';
+        inDialog = $("#inDialog").kendoWindow({
+            actions: ["Close"],
+            width: 800,
+            height: 500,
+            title: '<@spring.message "应付明细新增关联采购单"/>', // 弹窗的标题
+            content: url,
+            iframe: true,
+            visible: false,
+            resizable: false,
+            modal: true
+        }).data("kendoWindow");
+        // dialog.maximize().open();
+        inDialog.center().open();
+      }
+
+      // 打开页面
+      function openTab() {
+      /*
+        第一个参数：文件名称；
+        第二个参数：单号或者id（具体看后台用单号查数据还是id）；
+        第三个参数：打开tab页的名称；
+        第四个参数：页面的路径
+      */
+        window.top.closeTab('sp_soa_payable_bills_detail' + viewModel.model.soaNo, '应付单详情', '${base.contextPath}/soa/payable/sp_soa_payable_bills_detail.html');
+      }
+      /* 新增(三种方法)止 */
+
+
+      // 删除行
+      function removeRow() {
+        let grid = $("#grid").data("kendoGrid");
+        let gridList = $("#grid").data("kendoGrid").selectedDataItems();
+        if(gridList.length == 0) {
+          kendo.ui.showInfoDialog({
+              message: '请选择一行数据'
+          })
+          return
+        }
+        gridList.forEach(item => {
+          // 表格自带一个removeRow删除方法，不支持多选删除(不好用)，用数据源的remove删除方法
+          dataSource.remove(item);
+        })
+      }
+
+
+
+      // 下载模板
+      function downloadTemp() {
+        window.location.href = ""+"/own/common/template/"+"ams_asset_card";
+      }
+
+      // 保存
+      function save() {
+        console.log('save')
+      }
+
+
+
+      // 导出数据
+      function exportExcel(){
+        let grid = $("#grid").data("kendoGrid");
+        let excelTitles = ['序号','对账单号', '业务日期', '公司名称' , '供应商名称', '合同名称', '业务项目名称', '产品小类名称','品牌名称','部门名称','收支项目名称','数量','单位','不含税单价(元)','不含税总价(元)','税率','含税单价(元)','含税总价(元)','运单号','VIN码','制单日期','起运地','运抵地','运输类型','运输方式','补贴款(含税)','考核扣款(含税)','应付不含税结算金额(元)','应付含税结算金额(元)','备注','明细生成时间','对账确认时间','状态'];
+        //初始化标题数组
+        let excelHeader = [];
+        for (let i in excelTitles) {
+          excelHeader.push({
+              value: excelTitles[i], //标题文字
+              background: '#92cddc', //标题背景颜色
+              color: '#000',         //标题字体颜色
+              textAlign: 'center',   //文字水平对齐方式
+              verticalAlign: 'center', //文字竖直对齐方式
+              borderLeft: {size: 1, color: '#ddd'},//左边框大小及颜色
+              borderRight: {size: 1, color: '#ddd'},
+              borderBottom: {size: 1, color: '#ddd'},
+              borderTop: {size: 1, color: '#ddd'},
+          })
+        }
+        //最终导出数据
+        let excelData = [];
+        //将标题加至导出数据
+        excelData.push({
+            cells: excelHeader
+        });
+        //将源数据添加至导出数据
+
+        let datas
+        // 如果没选择，就导出第一页
+        if(grid.selectedDataItems().length==0) {
+          datas = grid.dataSource.data();
+        } else {
+          // 导出选中的数据
+          datas = grid.selectedDataItems();
+        }
+        $.each(datas, function (i, n) {
+          excelData.push({
+            cells: [
+              {value: i+1, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.statementsNo, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.businessDate, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.orgName, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.supplierName, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.contractName, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.projectName, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.productSmallClassName, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.customerBrandName, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.useDepartmentName, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.costTypeName, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.quantity, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.unit, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.notTaxPrice, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.noTaxAmount, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.taxRate, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.taxPrice, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.taxAmount, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.waybillNo, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.vinCode, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.billingDate, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.departure, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.arrival, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.transportType, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.transportMode, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.subsidyAmount, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.assessAmount, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.noTaxSettleAmount, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.taxSettleAmount, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.remark, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.assetType, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.status, verticalAlign: 'center', textAlign: 'center'},
+              {value: n.status, verticalAlign: 'center', textAlign: 'center'},
+            ],
+          });
+        });
+        //设置列宽度与样式
+        let columns = [];
+        for (let i = 0; i < excelTitles.length; i++) {
+            columns.push({width: 150});
+        }
+        //配置导出excel sheets,格式与文件名
+        let workbook = new kendo.ooxml.Workbook({
+          sheets: [ // sheet数组，如需导出多个sheet在此完成
+            {
+              title: '整车运输',//sheet 名称
+              columns: columns, //列
+              rows: excelData //数据
+            }
+          ]
+        });
+        //设置文件名
+        kendo.saveAs({
+          dataURI: workbook.toDataURL(), //数据源
+          fileName: '整车运输导出.xlsx' , //文件名
+        });
+      }
+
+
+      // 导入数据
+      function importExcel() {
+        var uploadURL = "${base.contextPath}" + "/own/asset/card/import";  //上传路径
+        var downloadURL = ""; // 下载路径
+        var windowId = "importWin"; // 默认
+        var gridId = "grid";// 默认
+        var requestMess = uploadURL + ":" + downloadURL + ":" + windowId + ":" + gridId;
+        var assignBuss = $("#importWin").kendoWindow({
+          width: 600,
+          height: 400,
+          title: '导入excel',
+          visible: false,
+          iframe: true,
+          modal: true,
+          resizable: false,
+          content: "${base.contextPath}/settlement/common/uploadFile.html?requestMess=" + requestMess, // 导入弹窗的页面路径
+          close: function (e) {
+            // 导入完，跳转到第一页
+            $("#grid").data("kendoGrid").dataSource.page(1);
+          }
+        }).data("kendoWindow");
+        assignBuss.center().open();
+      }
+
+      Hap.autoResizeGrid("#grid");
+
+
+          // 存入流程变量 (此方法可以被流程内调用，添加或者修改存入流程的变量)
+    function getFormProperties() {
+      if (node == '1'){ // 填写预算
+        var data = {};
+        var price = viewModel.model.get("price") || '';
+        if (price > 500){
+          data['isOverFiveHundred'] = 'true';
+        }else {
+          data['isOverFiveHundred'] = 'false';
+        }
+        return data;
+      }
+      return '';
+    }
+    </script>
+  </body>
+
+  </html>
