@@ -1,0 +1,30 @@
+2022-07-29更新到生产环境
+lov：
+ 新增：YC_SOA_ORG
+ 修改：ORG_MCODE_NAME、YC_SUPPLIER_BANK、LOV_CONTRACT、YC_USE_DEPARTMENT、YC_PROJECT、LOV_TAX_RATE、YC_ASSETS_NAME
+
+数据字典：
+新增：
+修改：PRE_BILLS_STATUS、PAYABLE_STATUS、TABLE_UPLOAD_TYPE、APPLY_FEE
+
+<------------------------------------------------------------------------------------->
+lov：
+修改：YC_USE_DEPARTMENT(已更新生产)、YC_COST_TYPE  (已更新生产)
+数据字典
+修改: TABLE_UPLOAD_TYPE(已更新生产)、APPLY_FEE(已更新生产)
+
+流程图 自有-维修申请  自有-批量保养申请 自有-调配申请(非仓库) (已更新生产)
+
+<------------------------------------------------------------------------------------->
+开票申请单 上线数据
+lov:YC_CUSTOMER_BANK、
+数据字典:SR_INVOICE_STATUS、TABLE_UPLOAD_TYPE、INVOICE_TYPE、COV_BILL_TYPE、TAX_TYPE、APPLY_FEE(适用表单需要配置)
+流程编码：SR_INVOICE_APPLY
+
+<------------------------------------------------------------------------------------->
+
+lov :  NCC_SOA_ORG、NCC_USE_DEPARTMENT (已更新生产)
+数据字典： TABLE_UPLOAD_TYPE (暂估单的附件) (废弃)
+
+lov：YC_USE_DEPARTMENT
+数据字典：

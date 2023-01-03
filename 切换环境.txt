@@ -1,0 +1,10 @@
+方法： 修改tomcat配置
+地址：E:\tomcat\conf
+找到context.xml文件 打开
+
+使用sit环境需要注释uat的
+使用uat环境需要注释sit的
+
+sit: <Resource auth="Container" driverClassName="com.mysql.cj.jdbc.Driver" name="jdbc/lcp_db" password="fxz#r2c_oMf08px4"  type="javax.sql.DataSource" url="jdbc:mysql://172.16.20.196:53306/dfwlg_fmp_sit?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=Asia/Shanghai&amp;allowMultiQueries=true&amp;zeroDateTimeBehavior=CONVERT_TO_NULL" username="fmp_sit"/>
+
+uat: <Resource auth="Container" driverClassName="com.mysql.cj.jdbc.Driver" name="jdbc/lcp_db" password="fmp2#r1[_oMf08px"  type="javax.sql.DataSource" url="jdbc:mysql://172.26.151.101:53306/dfwlg_fmp_prod?useSSL=false&amp;allowPublicKeyRetrieval=true&amp;serverTimezone=Asia/Shanghai&amp;allowMultiQueries=true" username="root"/>
