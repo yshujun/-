@@ -28,3 +28,8 @@ lov :  NCC_SOA_ORG、NCC_USE_DEPARTMENT (已更新生产)
 
 lov：YC_USE_DEPARTMENT
 数据字典：
+
+
+<---整车----------------------------------------------------------------------------------->
+lov：BILLING_CONTRACT、BRANCH、CAR_MODEL
+数据字典：ZC.ORDER_STATUS、ZC.TRANSPORT_TYPE、ZC.SETTLEMENT_TYPE、ZC.LINE_TYPE
