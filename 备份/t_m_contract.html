@@ -1,0 +1,485 @@
+<#include "../include/header.html">
+<script type="text/javascript">
+    var viewModel = Hap.createGridViewModel("#grid");
+    var contractTypDatasource = new kendo.data.DataSource({
+        transport: {
+            read: {
+                url: _basePath + "/t/choice/query?category=contract_type",
+                dataType: "json"
+            }
+        },
+        schema: {
+            data: 'rows'
+        }
+    });
+</script>
+<body style="overflow:-Scroll;overflow-x:hidden">
+<div id="page-content">
+
+
+    <div class="form-group">
+        <form class="form-horizontal" id="query-form">
+            <div>
+                <div class="form-group">
+                    <div class="col-sm-4">
+                        <label class="control-label col-sm-4">合同号</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="k-textbox" data-bind="value:model.contractCode"/>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="control-label col-sm-4">合同名称</label>
+                        <div class="col-sm-8">
+                            <input type="text"  class="k-textbox" data-bind="value:model.contractName" id="cityGrade"/>
+                        </div>
+
+                    </div>
+
+                    <div class="col-sm-4">
+                        <label class="control-label col-sm-4">合同签订组织</label>
+                        <div class="col-sm-8">
+                            <input type="text"  class="k-textbox"  data-bind="value:model.orgName" id="orgName"/>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="col-sm-4">
+                        <label class="control-label col-sm-4">协议类型</label>
+                        <div class="col-sm-8">
+                            <input data-bind="value:model.contractType" id="contractType"/>
+                        </div>
+                    </div>
+
+                    <script>
+
+                        $("#contractType").kendoComboBox({
+                            dataTextField: "label",
+                            dataValueField: "value",
+                            valuePrimitive: true,
+                            dataSource: contractTypDatasource
+                        });
+                    </script>
+
+                    <div class="col-sm-4">
+                        <label class="control-label col-sm-4">收方</label>
+                        <div class="col-sm-8">
+                            <input type="text"  class="k-textbox"  data-bind="value:model.supplierName" id="supplier"/>
+                        </div>
+                    </div>
+
+
+                    <div class="col-sm-4">
+                        <label class="control-label col-sm-4">付方</label>
+                        <div class="col-sm-8">
+                            <input  type="text"  class="k-textbox" data-bind="value:model.customerName" id="customer"/>
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="form-group more" style="display: none">
+
+
+                    <div class="col-sm-4">
+                        <label class="control-label col-sm-4">合同跟进人</label>
+                        <div class="col-sm-8">
+                            <input type="text"  class="k-textbox" data-bind="value:model.personName" id="person"/>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <label class="control-label col-sm-4">是否有效</label>
+                        <div class="col-sm-8">
+                            <input data-bind="value:model.isValid" id="isValid"/>
+                        </div>
+                    </div>
+
+
+                    <script>
+                        $("#isValid").kendoComboBox({
+                            dataSource: [
+                                { value: "Y", label: "有效" },
+                                { value: "N", label: "无效" }
+                            ],
+                            dataTextField: "label",
+                            dataValueField: "value",
+                            valuePrimitive: true
+                        });
+                    </script>
+
+
+                    <div class="col-sm-4">
+                        <label class="control-label col-sm-4">起止时间</label>
+                        <div class="col-sm-8">
+                            <input id="effectiveDate" style="width: 45%" data-bind="value:model.effectiveDate"/>
+                            ~
+                            <input type="text" style="width: 45%" id="expiredDate" data-bind="value:model.expiredDate">
+                        </div>
+                    </div>
+                    <script>
+                        var confirmMaxDate=new Date(2099,12,31);
+                        var confirmMinDate=new Date(1900,1,1);
+                        var dt = new Date();
+                        $("#effectiveDate").kendoDatePicker({
+                            format:"yyyy-MM-dd",
+                            interval:"15",
+                            max:viewModel.model.expiredDate,
+                            change: function () {
+                                var end = $("#expiredDate").data("kendoDatePicker");
+                                if ($("#effectiveDate").val()) {
+                                    end.setOptions({
+                                        min: $("#effectiveDate").val()
+                                    });
+                                } else {
+                                    end.setOptions({
+                                        min: confirmMinDate
+                                    });
+                                }
+                            }
+                        }).data("kendoDatePicker");;
+
+                        $("#expiredDate").kendoDatePicker({
+                            format:"yyyy-MM-dd",
+                            interval:"15",
+                            min:dt,
+                            change: function () {
+                                var start = $("#effectiveDate").data("kendoDatePicker");
+                                if ($("#expiredDate").val()) {
+                                    start.setOptions({
+                                        max: $("#expiredDate").val()
+                                    });
+                                } else {
+                                    start.setOptions({
+                                        max: confirmMaxDate
+                                    });
+                                }
+                            }
+                        }).data("kendoDatePicker");
+
+                    </script>
+
+                </div>
+
+            </div>
+            <div id="line" style="margin-top: 10px"></div>
+            <div class="clearfix"></div>
+            <script>
+                $("#line").kendoDivideLine({
+                    target: ".more",
+                    width: "93%",
+                    hasIcon: true
+                });
+            </script>
+        </form>
+    </div>
+    <div class="pull-right" id="toolbar-btn" style="padding-bottom:10px;">
+        <span class="btn btn-primary" style="float:left;width:70px;margin-right: 5px" data-bind="click:query" type="submit"><i class="fa fa-search"></i><@spring.message "hap.query"/></span>
+        <span class="btn btn-primary" style="float:left;width:70px;margin-right: 5px" type="button" data-bind="click:reset"><i class="fa fa-eraser"></i><@spring.message "hap.reset"/></span>
+        <span class="btn btn-primary k-grid-add" style="float:left;margin-left:5px;" onclick="createContract()"><i class="fa fa-plus-square"></i><@spring.message "hap.new"/></span>
+        <span class="btn btn-primary" style="float:left;margin-left:5px;"  onclick="importExcel()"> <i class="fa fa-file-excel-o"></i>导入</span>
+        <span class="btn btn-primary" style="float:left;margin-left:5px;"  onclick="exportExcel()"> <i class="fa fa-file-excel-o"></i>导出</span>
+        <div style="clear:both"></div>
+    </div>
+    <script>kendo.bind($('#toolbar-btn'), viewModel);</script>
+</div>
+
+<div id="unit_select_dialog" style="display: none"></div>
+<div style="clear:both">
+    <div id="grid"></div>
+    <div id="importDIV"></div>
+</div>
+</div>
+
+<script type="text/javascript">
+    Hap.initEnterQuery('#query-form', viewModel.query);
+    var BaseUrl = _basePath;
+    kendo.bind($('#page-content'), viewModel);
+    Lcp.gridToolTip("#grid",1);
+    dataSource = new kendo.data.DataSource({
+        transport: {
+            read: {
+                url: BaseUrl + "/t/m/contract/queryContractArchives",
+                type: "POST",
+                dataType: "json"
+            },
+            parameterMap: function (options, type) {
+                if (type !== "read" && options.models) {
+                    var datas = Hap.prepareSubmitParameter(options, type)
+                    return kendo.stringify(datas);
+                } else if (type === "read") {
+                    return Hap.prepareQueryParameter(viewModel.model.toJSON(), options)
+                }
+            }
+        },
+        batch: true,
+        serverPaging: true,
+        pageSize: 20,
+        schema: {
+            data: 'rows',
+            total: 'total',
+            model: {
+                id: "id",
+                fields: {}
+            }
+        }
+    });
+
+    $("#grid").kendoGrid({
+        dataSource: dataSource,
+        rownumber: true,
+        resizable: true,
+        scrollable: true,
+        navigatable: false,
+        selectable: 'multiple, rowbox',
+        dataBound: function () {
+            if (parent.autoResizeIframe) {
+                parent.autoResizeIframe('${RequestParameters.functionCode!}')
+            }
+            $(".k-grid-header colgroup").children().eq(0).width("40px");
+            $(".k-grid-content colgroup").children().eq(0).width("40px");
+            $("#grid th").eq(0).text("序号");
+        },
+        pageable: {
+            pageSizes: [5, 10, 20, 50],
+            refresh: true,
+            buttonCount: 5
+        },
+        columns: [
+            {
+                field: "id",
+                title: 'id',
+                width: 120,
+                hidden:true
+            },
+         {
+                title: '操作',
+                width: 40,
+                template: function(dataItem) {
+                    var repealColor = "color: #4169E1;";
+                    return '<a href="javascript:void(0);" style="'+repealColor+'" onclick="contractDetails(\''+dataItem.id+'\')">编辑</a>';
+                }
+            },
+            {
+                field: "contractCode",
+                title: '合同号',
+                width: 120,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "contractName",
+                title: '合同名称',
+                width: 120,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "orgName",
+                title: '合同签订组织',
+                width: 120,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "contractTypeLabel",
+                title: '协议类型',
+                width: 70,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "supplierName",
+                title: '收方',
+                width: 160,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "supplierCode",
+                title: '收方编码',
+                width: 140,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "customerName",
+                title: '付方',
+                width: 120,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "ycCustomerCode",
+                title: '付方编码',
+                width: 120,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "effectiveDate",
+                title: '起始时间',
+                width: 65,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "expiredDate",
+                title: '终止时间',
+                width: 65,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "personName",
+                title: '合同跟进人',
+                width: 55,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "createName",
+                title: '创建人',
+                width: 55,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "isValidMeaing",
+                title: '是否有效',
+                width: 50,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+            {
+                field: "remark",
+                title: '备注',
+                width: 100, headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+            },
+
+        ],
+    editable: false
+    });
+    Hap.autoResizeGrid("#grid");
+    function contractDetails(id) {
+        window.top.openTab('contract_detail'+id,'合同档案编辑',"${base.contextPath}/common/contract_detail.html?businessKey="+id+"&editable=false");
+    }
+    function createContract(){
+        window.top.openTab('contract_add','合同档案新建',"${base.contextPath}/common/contract_add.html");
+        // window.top.openTab('contract_add','合同档案新建',"${base.contextPath}/common/contract_detail2.html");
+    }
+    //数据导入
+    function importExcel() {
+        var uploadURL = "${base.contextPath}/t/m/contract/importExcel";
+        var title = '合同档案导入';
+        var downloadURL = "${base.contextPath}/resources/files/t_m_contract.xlsx";  //下载模版路径
+        var windowId = "importDIV";
+        var gridId = "grid";
+        var isShowModel="true";
+        var requestMess = uploadURL + ":" + downloadURL + ":" + windowId + ":" + gridId+ ":" + isShowModel;
+        var assignBuss = $("#importDIV").kendoWindow({
+            width: 600,
+            height: 400,
+            title: '导入excel',
+            visible: false,
+            iframe: true,
+            modal: true,
+            resizable: false,
+            content: "${base.contextPath}/base_info/orgAtDept_excelImport.html?requestMess="+requestMess,
+            close: function (e) {
+                $("#grid").data("kendoGrid").dataSource.page(1);
+            }
+        }).data("kendoWindow");
+        assignBuss.title(title).center().open();
+    }
+    //数据导出
+    function exportExcel() {
+        var checked =$("#grid").data("kendoGrid").selectedDataItems();
+        var idArray = [];
+        if (checked.length > 0) {
+            $.each(checked, function (i, v) {
+                idArray.push(v.id);  //项目id
+            })
+        }
+        var url = "${base.contextPath}/t/m/contract/exportExcel?${_csrf.parameterName}=${_csrf.token}";
+        var fileName = "合同档案.xlsx";
+        var form = $("<form></form>").attr("action", url).attr("method", "post");
+        form.append($("<input></input>").attr("type", "hidden").attr("name", "fileName").attr("value", fileName));
+        form.append($("<input></input>").attr("type", "hidden").attr("name", "idArray").attr("value", idArray));
+        form.appendTo('body').submit().remove();
+    }
+</script>
+</body>
+</html>

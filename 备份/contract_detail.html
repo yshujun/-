@@ -1,0 +1,1650 @@
+<#include "../include/header.html">
+<script src="${base.contextPath}/resources/js/ycCommon.js"></script>
+<style>
+    input::-webkit-input-placeholder {
+        /* WebKit browsers */
+        color: #000000;
+    }
+    input:-moz-placeholder {
+        /* Mozilla Firefox 4 to 18 */
+        color: #000000;
+    }
+    input::-moz-placeholder {
+        /* Mozilla Firefox 19+ */
+        color: #000000;
+    }
+    input:-ms-input-placeholder {
+        /* Internet Explorer 10+ */
+        color: #000000;
+    }
+</style>
+<script type="text/javascript">
+    var viewModel = Hap.createGridViewModel("#grid",{
+        model:{
+            id : '${RequestParameters.businessKey!}',
+            editable : '${RequestParameters.editable!}'
+        }
+    });
+    var contractCode = '${RequestParameters.contractCode!}';
+    var params = {id: viewModel.model.id}
+    console.log(viewModel.model.id)
+    if(!viewModel.model.id && contractCode) {
+        params = {contractCode: contractCode}
+    }
+    $.ajax({
+        type: "POST",
+        // url: "${base.contextPath}/t/m/contract/queryContractArchives",
+        url: "${base.contextPath}/t/m/contract/queryContractById",
+        data: params,
+        dataType: "json",
+        async : false,
+        success: function (data) {
+            if (data.success) {
+                var row = data.rows[0];
+                for (var k in row) {
+                    viewModel.model.set(k, row[k]);
+                }
+                if(viewModel.model.contractType=='PURCHASE'){
+                    $(".supplierShow").show();
+                    $(".payerShow").hide();
+                }else if(viewModel.model.contractType=='SALE'){
+                    $(".payerShow").show();
+                    $(".supplierShow").hide();
+                }
+            } else {
+                kendo.ui.showErrorDialog({
+                    message: data.message
+                })
+            }
+        }
+    });
+</script>
+<body>
+<div id="page-content">
+    <div id="employee_select_window" style="display: none"></div>
+    <!-- <div class="form-group"> -->
+    <form class="form-horizontal" id="detailForm">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-accordion fa fa-angle-double-up" target-panel="subjectInfo">合同主体信息</a>
+                </h4>
+            </div>
+            <div id="subjectInfo" class="panel-body">
+                <div class="form-group">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">合同类型<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <input type="text" id="type" required data-bind="value:model.type" data-label="合同类型"
+                            data-message="请选择合同类型" name="type">
+                          <span class="k-invalid-msg" data-for="type"></span>
+                        </div>
+                        <script>
+                            // 合同类型
+                            $('#type').kendoComboBox({
+                            dataTextField: "meaning",
+                            dataValueField: "value",
+                            valuePrimitive: true,
+                            change: function () {
+                                var value = this.value()
+                                viewModel.set('showThirdParty', value === '2')
+                                if (value === '1') { // 清空丙方
+                                viewModel.set('model.thirdPartyId', '')
+                                viewModel.set('model.thirdPartyName', '')
+                                $('#thirdPartyNameInput').attr('required', false).parent().removeClass('k-state-required')
+                                } else {
+                                viewModel.set('model.thirdPartyWhetherCompanyUnit', 'N')
+                                $('#thirdPartyNameInput').attr('required', 'required').parent().addClass('k-state-required')
+                                }
+                            },
+                            dataSource: [{"objectVersionNumber":1,"_lastUpdateDate":1635236708000,"_creationDate":1635236708000,"codeId":"902593518030028800","codeValueId":"902593524225015808","description":"双方合同","meaning":"双方合同","value":"1","orderSeq":1,"tag":null,"enabledFlag":"Y","parentCodeValueId":null,"parentCodeValue":null,"parentCodeValueMeaning":null,"code":"contract_type","mdmCode":null},{"objectVersionNumber":1,"_lastUpdateDate":1635236707000,"_creationDate":1635236707000,"codeId":"902593518030028800","codeValueId":"902593521758765056","description":"三方合同","meaning":"三方合同","value":"2","orderSeq":2,"tag":null,"enabledFlag":"Y","parentCodeValueId":null,"parentCodeValue":null,"parentCodeValueMeaning":null,"code":"contract_type","mdmCode":null}]
+                            }).data('kendoComboBox').enable(false)
+                        </script>
+                      </div>
+                      <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">是否集团统签<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <label class="radio-inline"><input value="Y" type="radio" name="whetherUnifiedSign" required disabled
+                              data-bind="checked:model.whetherUnifiedSign"
+                              style="width:auto" /><span>是</span></label>
+                          <label class="radio-inline"><input value="N" type="radio" name="whetherUnifiedSign" required disabled
+                              data-bind="checked:model.whetherUnifiedSign" 
+                              style="width:auto" /><span>否</span></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">甲方是否为本公司单位<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <label class="radio-inline"><input value="Y" type="radio" name="firstPartyWhetherCompanyUnit" disabled
+                              data-bind="checked:model.firstPartyWhetherCompanyUnit"
+                              style="width:auto" /><span>是</span></label>
+                          <label class="radio-inline"><input value="N" type="radio" name="firstPartyWhetherCompanyUnit" disabled
+                              data-bind="checked:model.firstPartyWhetherCompanyUnit"
+                              style="width:auto" /><span>否</span></label>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">甲方<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <input type="text" id="firstPartyNameInput" name="firstPartyNameInput" required class="k-textbox" disabled style="background-color: #EFEFEF;"
+                            data-bind="value:model.firstPartyId" data-label="甲方" data-message="请输入甲方名称">
+                          <span class="k-invalid-msg" data-for="firstPartyNameInput"></span>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">甲方联络人<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <input type="text" class="k-textbox" id="firstPartyContactsNameInput" required class="k-textbox" disabled style="background-color: #EFEFEF;"
+                            data-bind="value:model.firstPartyContactsName" name="firstPartyContactsName" data-label="甲方联络人" 
+                            maxlength="20" data-message="请输入甲方联络人">
+                          <span class="k-invalid-msg" data-for="firstPartyContactsName"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">乙方是否为本公司单位<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <label class="radio-inline"><input value="Y" type="radio"
+                              data-bind="checked:model.secondPartyWhetherCompanyUnit" disabled
+                              style="width:auto" /><span>是</span></label>
+                          <label class="radio-inline"><input value="N" type="radio"
+                              data-bind="checked:model.secondPartyWhetherCompanyUnit" disabled
+                              style="width:auto" /><span>否</span></label>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">乙方<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <input type="text" id="secondPartyNameInput" name="secondPartyNameInput" required class="k-textbox" disabled style="background-color: #EFEFEF;"
+                            data-bind="value:model.secondPartyId" maxlength="20" data-label="乙方" data-message="请输入乙方名称">
+                          <span class="k-invalid-msg" data-for="secondPartyNameInput"></span>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4" >
+                        <label class="col-sm-4 control-label">乙方联络人<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <input type="text" class="k-textbox" id="secondPartyContactsNameInput" required
+                            data-bind="value:model.secondPartyContactsName" maxlength="20" data-label="乙方联络人" disabled style="background-color: #EFEFEF;"
+                            data-message="请输入乙方联络人" name="secondPartyContactsName">
+                          <span class="k-invalid-msg" data-for="secondPartyContactsName"></span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" data-bind="visible:showThirdParty" id="showThirdPartyBox">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">丙方是否为本公司单位<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <label class="radio-inline"><input value="Y" type="radio"
+                              data-bind="checked:model.thirdPartyWhetherCompanyUnit" disabled
+                              style="width:auto" /><span>是</span></label>
+                          <label class="radio-inline"><input value="N" type="radio"
+                              data-bind="checked:model.thirdPartyWhetherCompanyUnit" disabled
+                              style="width:auto" /><span>否</span></label>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">丙方<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <input type="text" id="thirdPartyNameInput" name="thirdPartyNameInput" class="k-textbox" disabled style="background-color: #EFEFEF;"
+                            data-bind="value:model.thirdPartyId" data-label="丙方" data-message="请输入丙方名称">
+                          <span class="k-invalid-msg" data-for="thirdPartyNameInput"></span>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">丙方联络人<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                          <input type="text" class="k-textbox" id="thirdPartyContactsNameInput" required
+                            data-bind="value:model.thirdPartyContactsName" maxlength="20" data-label="丙方联络人" disabled style="background-color: #EFEFEF;"
+                            data-message="请输入丙方联络人" name="thirdPartyContactsName">
+                          <span class="k-invalid-msg" data-for="thirdPartyContactsName"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-accordion fa fa-angle-double-up" target-panel="headInfo">基础信息</a>
+                </h4>
+            </div>
+            <div id="headInfo" class="panel-body">
+                <div class="form-group">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label" type="text">合同号<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                            <input type="text" class="k-textbox"  name="合同号" data-bind="value : model.contractCode" disabled style="background-color: #EFEFEF;" required="required" />
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">合同名称<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                            <input  type="text" id="applyDate"  class="k-textbox" data-bind="value:model.contractName" required="required" />
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">合同签订组织<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                            <input  id="dataSourceVal" data-bind="value:model.orgName"  required="required" />
+                        </div>
+                     <script>
+                            //$("#dataSourceVal").kendoLov(<@lov"ORG_MCODE_NAME"/>,{
+                            $("#dataSourceVal").kendoLov($.extend(<@lov "ORG_MCODE_NAME" />, {
+                                valuePrimitive:true,
+                                textField: 'orgName',
+                                model: viewModel.model,
+                                dataTextField: 'name',
+                                dataValueField: 'name',
+                                select : function(e){
+                                    viewModel.model.set('orgMcode',e.item.mdmCode);
+                                    viewModel.model.set('personName','');
+                                }
+                            }))
+                        </script>
+                    </div>
+
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-4" >
+                        <label class="col-sm-4 control-label">协议类型<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                            <input id="contractType" data-bind="value:model.contractType"  required="required" />
+                        </div>
+                       <!-- <script>
+                            //$("#orgName").kendoLov(<@lov"ORG_MCODE_NAME"/>,{
+                            $("#accountingType").kendoLov($.extend(<@lov "GET_CONTRACT_TYPE" />, {
+                                valuePrimitive:true,
+                                dataTextField: 'label',
+                                dataValueField: 'label',
+                                textField: 'contractTypeLabel',
+                                model: viewModel.model,
+                                query: function(e) {
+                                    e.param['category'] ='contract_type';
+                                },
+                                select : function(e){
+                                    viewModel.model.set('contractType',e.item.value);
+                                }
+                            }))
+                            </script>-->
+                    </div>
+                    <div class="col-sm-4 supplierShow" style="display: none">
+                        <label class="col-sm-4 control-label">收方<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                            <input data-bind="value:model.supplierName"  id="supplier" required="required" />
+                        </div>
+                        <script>
+                            //$("#orgName").kendoLov(<@lov"ORG_MCODE_NAME"/>,{
+                            $("#supplier").kendoLov($.extend(<@lov "GET_SUPPLIER" />, {
+                                valuePrimitive:true,
+                                dataTextField: 'supplierName',
+                                dataValueField: 'id',
+                                textField: 'supplierName',
+                                model: viewModel.model,
+                                select : function(e){
+                                    viewModel.model.set("bankDeposit",e.item.bankDeposit);
+                                    viewModel.model.set("bankAccounts",e.item.bankAccounts);
+                                    viewModel.model.set('receiver',e.item.id);
+                                }
+                            }))
+                        </script>
+                    </div>
+                    <div class="col-sm-4 payerShow" style="display: none" >
+                        <label class="col-sm-4 control-label">付方<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                            <input data-bind="value:model.customerName"  id="pay" required="required" />
+                        </div>
+                        <script>
+                            //$("#orgName").kendoLov(<@lov"ORG_MCODE_NAME"/>,{
+                            $("#pay").kendoLov($.extend(<@lov "YC_CUSTOMER_BANK" />, {
+                                valuePrimitive:true,
+                                dataTextField: 'customerName',
+                                dataValueField: 'id',
+                                textField: 'customerName',
+                                model: viewModel.model,
+                                select : function(e){
+                                    viewModel.model.set('payer',e.item.id);
+                                }
+                            }))
+                        </script>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">合同跟进人</label>
+                        <div class="col-sm-8">
+                            <input  data-bind="value:model.personName" id="personName"/>
+                        </div>
+                        <script>
+                            //$("#orgName").kendoLov(<@lov"ORG_MCODE_NAME"/>,{
+                            $("#personName").kendoLov($.extend(<@lov "GET_PERSON" />, {
+                                textField: 'personName',
+                                model: viewModel.model,
+                                valuePrimitive:true,
+                                dataTextField: 'name',
+                                dataValueField: 'name',
+                                query: function(e) {
+                                    e.param['pkOrg'] =viewModel.model.get("orgMcode");
+                                },
+                                select : function(e){
+                                    viewModel.model.set('empCode',e.item.code);
+                                    viewModel.model.set('authorizerMcode',e.item.mdmCode);
+                                },
+                                change: function(e) {
+                                    if(!this.value()) {
+                                    viewModel.model.set('empCode', '');
+                                    viewModel.model.set('authorizerMcode', '');
+                                    }
+                                }
+                            }))
+                        </script>
+                    </div>
+
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">起始时间</label>
+                        <div class="col-sm-8">
+                            <input  type="text" data-bind="value:model.effectiveDate" id="applyDateFrom"  />
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">终止时间</label>
+                        <div class="col-sm-8">
+                            <input data-bind="value:model.expiredDate" id="applyDateTo"/>
+                        </div>
+                    </div>
+
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">是否有效<span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                            <input  data-bind="value:model.isValid"  id="isValid"  required="required"/>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group supplierShow">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">支付方式<span style="color:red">*</span></label>
+                        <div class="col-sm-8">
+                            <input id="installmentType"   data-bind="value:model.installmentType" required />
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">合同金额(元)<span style="color:red">*</span></label>
+                        <div class="col-sm-8">
+                            <input id="totalContractAmount"  data-bind="value:model.totalContractAmount" required  />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" style="display: none;">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">合同子类</label>
+                        <div class="col-sm-8">
+                            <input id="subclass" class="k-textbox" data-bind="value:model.subclass" disabled style="background-color: #EFEFEF;" />
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">一级类别码</label>
+                        <div class="col-sm-8">
+                            <input id="firstCategoryCode" class="k-textbox"  data-bind="value:model.firstCategoryCode" disabled style="background-color: #EFEFEF;"/>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">二级类别码</label>
+                        <div class="col-sm-8">
+                            <input id="secondCategoryCode" class="k-textbox" data-bind="value:model.secondCategoryCode" disabled style="background-color: #EFEFEF;" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" style="display: none;">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">采购供应商代码</label>
+                        <div class="col-sm-8">
+                            <input id="srmSupplierCode" class="k-textbox" data-bind="value:model.srmSupplierCode" disabled style="background-color: #EFEFEF;" />
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">客户代码</label>
+                        <div class="col-sm-8">
+                            <input id="customerCode" class="k-textbox"  data-bind="value:model.customerCode" disabled style="background-color: #EFEFEF;"/>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">合同履行方式</label>
+                        <div class="col-sm-8">
+                            <input id="contractPerformanceMethod" class="k-textbox" data-bind="value:model.contractPerformanceMethod" disabled style="background-color: #EFEFEF;" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" style="display: none;">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">币种</label>
+                        <div class="col-sm-8">
+                            <input id="currency" class="k-textbox" data-bind="value:model.currency" disabled style="background-color: #EFEFEF;" />
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">合同执行节点</label>
+                        <div class="col-sm-8">
+                            <input id="currentNode" class="k-textbox"  data-bind="value:model.currentNode" disabled style="background-color: #EFEFEF;"/>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">合同不含税金额</label>
+                        <div class="col-sm-8">
+                            <input id="totalContractFreeAmount" class="k-textbox" data-bind="value:model.totalContractFreeAmount" disabled style="background-color: #EFEFEF;" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group" style="display: none;">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">付款期数（闭口）</label>
+                        <div class="col-sm-8">
+                            <input id="paymentPeriod" class="k-textbox" data-bind="value:model.paymentPeriod" disabled style="background-color: #EFEFEF;" />
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">付款周期（开口）</label>
+                        <div class="col-sm-8">
+                            <input id="paymentCycle" class="k-textbox"  data-bind="value:model.paymentCycle" disabled style="background-color: #EFEFEF;"/>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">支付倍数</label>
+                        <div class="col-sm-8">
+                            <input id="paymentCap" class="k-textbox" data-bind="value:model.paymentCap" disabled style="background-color: #EFEFEF;" />
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-4">
+                        <label class="col-sm-4 control-label">备注 <span style="color: red">*</span></label>
+                        <div class="col-sm-8">
+                            <textarea id="businessTripReason" required="required"  data-bind="value:model.remark"></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default" style="display:none;">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-accordion fa fa-angle-double-up" target-panel="budget">合同授权</a>
+                </h4>
+            </div>
+            <div  class="panel-body" >
+
+                <div style="clear:both">
+                    <div id="Grid"></div>
+                </div>
+            </div>
+        </div>
+<!--         
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-accordion fa fa-angle-double-up" target-panel="cps">合同付款计划表</a>
+                </h4>
+            </div>
+            <div id="cps" class="panel-collapse collapse in">
+                <div id="cpsGrid"></div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-accordion fa fa-angle-double-up" target-panel="cspf">合同阶梯付款表</a>
+                </h4>
+            </div>
+            <div id="cspf" class="panel-collapse collapse in">
+                <div id="cspfGrid"></div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-accordion fa fa-angle-double-up" target-panel="saf">合同补充协议表</a>
+                </h4>
+            </div>
+            <div id="saf" class="panel-collapse collapse in">
+                <div id="safGrid"></div>
+            </div>
+        </div>
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-accordion fa fa-angle-double-up" target-panel="loco">合同标的物清单表</a>
+                </h4>
+            </div>
+            <div id="loco" class="panel-collapse collapse in">
+                <div id="locoGrid"></div>
+            </div>
+        </div> -->
+
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h4 class="panel-title">
+                    <a class="panel-accordion fa fa-angle-double-up" target-panel="fileInfo">文件信息</a>
+                </h4>
+            </div>
+            <div id="fileInfo" class="panel-collapse collapse in">
+                <div class="panel-body">
+                    <div id="file-list">
+                        <div id="tabContent" class="tab-content">
+                            <div id="imgInfo" class="tab-pane fade in active" style="margin-top: 10px;">
+                                <div id="imageShow" style="clear: both;"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <script type="text/x-kendo-template" id="fileInfoTemplate">
+                        <div class="toolbar" id="fileInfoToolbar" style="padding-bottom:10px;">
+                                <span data-bind="click:removeRows" class="btn btn-danger" style="float:left;"><i
+                                        class="fa fa-trash-o" style="margin-right:3px;"></i>删除</span>
+                        </div>
+                    </script>
+                </div>
+            </div>
+        </div>
+
+    </form>
+        <div style="position:fixed; bottom: 10px;right: 10px; z-index: 100;">
+            <div id="addEditButton2">
+                <!-- <span id="delete" class="btn btn-danger " onclick="removeContract()"style="float:right;margin-right:5px;"><i class="fa fa-trash-o"></i>删除</span> -->
+                <span class="btn btn-primary k-grid-save-changes" onclick="submit()" style="float:right;margin-right:5px;"><i class="fa fa-save"></i>提交</span>
+            </div>
+        </div>
+    <!-- </div> -->
+</div>
+
+<script type="text/javascript">
+    kendo.bind($('#page-content'), viewModel);
+    var BaseUrl = _basePath;
+    var contractTypDatasource = new kendo.data.DataSource({
+        transport: {
+            read: {
+                url: BaseUrl + "/t/choice/query?category=contract_type",
+                dataType: "json"
+            }
+        },
+        schema: {
+            data: 'rows'
+        }
+    });
+    $("#businessTripReason").kendoTextArea({
+        height: 70,
+        width: 760
+    });
+    var beAuthDatasource;
+    $(function () {
+        $.ajax({
+            url: _basePath + '/t/choice/query?category=be_auth_type',//授权
+            type: 'post',
+            dataType: "json",
+            contentType: "application/json",
+            async: false,        //同步
+            success: function (data) {
+                beAuthDatasource = data.rows
+            }
+        });
+    })
+
+    $("#contractType").kendoComboBox({
+        dataTextField: "label",
+        dataValueField: "value",
+        valuePrimitive: true,
+        dataSource: contractTypDatasource,
+        change: function(e){
+            var value = this.value();
+            if(value=='PURCHASE'){
+                $(".supplierShow").show();
+                $(".payerShow").hide();
+            }else if(value=='SALE'){
+                $(".payerShow").show();
+                $(".supplierShow").hide();
+            }
+
+        }
+    });
+    if (viewModel.model.contractType == 'PURCHASE') {    //采购合同
+        $(".supplierShow").show();
+        $(".payerShow").hide();
+
+    }else if (viewModel.model.contractType == 'SALE') {    //商务合同
+        $(".payerShow").show();
+        $(".supplierShow").hide();
+    }
+
+    $("#totalContractAmount").kendoNumericTextBox({
+        decimals: 2,
+        min: 0,
+        format: 'n2',
+        restrictDecimals: true,
+        spinners: false,
+        change:function () {}
+    });
+    $("#installmentType").kendoComboBox({
+        dataTextField: "label",
+        dataValueField: "value",
+        valuePrimitive: true,
+        dataSource: {
+            transport: {
+                read: {
+                    url: _basePath + "/t/choice/query?category=installment_type",
+                    dataType: "json",
+                    type: 'post'
+                }
+            },
+            schema: {
+                data: 'rows'
+            }
+        },
+        change:function () {}
+    });
+    dataSource = new kendo.data.DataSource({
+        transport: {
+            read: {
+                url: BaseUrl + "/t/m/contract/contractArchivesAuth",
+                type: "POST",
+                dataType: "json"
+
+            },
+           /* update: {
+                url: BaseUrl + "/t/m/org/at/dept/submit",
+                type: "POST",
+                contentType: "application/json"
+            },*/
+            // destroy: {
+            //     url: BaseUrl + "/t/m/dept/project/proDepRemove",
+            //     type: "POST",
+            //     contentType: "application/json"
+            // },
+            // create: {
+            //     url: BaseUrl + "/t/m/dept/project/SaveProDep",
+            //     type: "POST",
+            //     contentType: "application/json"
+            // },
+            parameterMap: function (options, type) {
+                if (type !== "read" && options.models) {
+                    var datas = Hap.prepareSubmitParameter(options, type)
+                    return kendo.stringify(datas);
+                } else if (type === "read") {
+                    return Hap.prepareQueryParameter(viewModel.model.toJSON(), options)
+                }
+            }
+        },
+        batch: true,
+        serverPaging: true,
+        pageSize: 20,
+        schema: {
+            data: 'rows',
+            total: 'total',
+            model: {
+                id: "id",
+                fields: {beAuthObjectMcode: {validation: {required: true}}} //
+            }
+        }
+    });
+
+    $("#Grid").kendoGrid({
+        dataSource: dataSource,
+        rownumber: true,
+        resizable: true,
+        scrollable: true,
+        navigatable: false,
+        selectable: 'multiple, rowbox',
+        dataBound: function () {
+            if (parent.autoResizeIframe) {
+                parent.autoResizeIframe('${RequestParameters.functionCode!}')
+            }
+            $(".k-grid-header colgroup").children().eq(0).width("40px");
+            $(".k-grid-content colgroup").children().eq(0).width("40px");
+            $("#grid th").eq(0).text("序号");
+        },
+        pageable: {
+            pageSizes: [5, 10, 20, 50],
+            refresh: true,
+            buttonCount: 5
+        },
+        columns: [
+            {
+                field: "beAuthType",
+                title: '被授权类型',
+                width: 120,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+                template: function (dataItem) {
+                    var v = dataItem.beAuthType;
+                    $.each(beAuthDatasource, function (i, n) {
+                        if ((n.value || '').toLowerCase() == (v || '').toLowerCase()) {
+                            v = n.label;
+                            return false;
+                        }
+                    })
+                    return v;
+
+                },
+
+                editor: function (container, options) {
+                    $('<input  name="' + options.field + '" required="required"/>')
+                        .appendTo(container)
+                        .kendoComboBox({
+                            dataTextField: "label",
+                            dataValueField: "value",
+                            valuePrimitive: true,
+                            dataSource: beAuthDatasource
+
+
+                        });
+                }
+
+            },
+
+            {
+                field: "beAuthObjectMcode",
+                title: '被授权对象',
+                width: 120,
+                headerAttributes: {
+                    style: "text-align: center"
+                },
+                attributes: {
+                    "class": "table-header-cell",
+                    style: "text-align: center;"
+                },
+
+            },
+           ,],
+        editable: true
+    });
+    function removeContract() {
+        Hap.blockUI();
+        //  var budgetDatas = $("#budgetGrid").data("kendoGrid").selectedDataItems();怎么选择数据源，model中的
+
+        kendo.ui.showConfirmDialog({
+            message: '确认删除吗？'
+        }).done(function (e) {
+          //  var applyNo = viewModel.model.applyNo;
+            if (e.button == "OK") {
+                $.ajax({
+                    type: "POST",
+                    url: "${base.contextPath}/t/m/contract/delete",
+                    data: JSON.stringify(viewModel.model),
+                    // dataType: "json",
+                    contentType: "application/json",
+                    success: function (data) {
+
+                        if (data.success) {
+                            kendo.ui.showInfoDialog({
+                                message: '删除成功！'
+                            }).done(function (e) {
+                                if (e.button == "OK") {
+                                    var mainTab = window.top.$("#mainTab").data("kendoTabStrip");
+                                    var idx = jQuery.inArray(_currentSystemCode + '__CONTRACT_ARCHIVES', mainTab.tabids);
+                                    var home = mainTab.contentElements[idx];
+                                    if (home) {
+                                        var iframe = $(home).find('iframe')[0];
+                                        iframe.contentWindow.dataSource.read();
+                                    }
+                                    window.top.closeTab('contract_detail' + viewModel.model.id, '合同档案编辑', "${base.contextPath}/common/contract_detail.html?businessKey=" + viewModel.model.id + "&editable=true");
+                                }
+
+                            })
+                        } else {
+                            kendo.ui.showErrorDialog({
+                                message: data.message
+                            })
+                        }
+                    }
+                })
+            }
+        })
+
+        Hap.unblockUI();
+    }
+    function submit() {
+        Hap.blockUI();
+        var contractCode = viewModel.model.contractCode;
+        var contractName = viewModel.model.contractName;
+        var orgName = viewModel.model.orgName;
+        var contractType = viewModel.model.contractType;
+        var supplierName = viewModel.model.supplierName;
+        var customerName = viewModel.model.customerName;
+        var receiver = viewModel.model.receiver;
+        var personName = viewModel.model.personName;
+        var isValid = viewModel.model.isValid;
+        var remark = viewModel.model.remark;
+        var authTypeBoolean=false;
+        var authTypeMcodeBoolean=false;
+        var getData = $("#Grid").data("kendoGrid").dataSource.data();
+     //   var validator = $("#page-content").data("kendoValidator");
+        if(!$("#Grid").data("kendoGrid").validate()){
+            Hap.unblockUI();
+            return;
+        }
+        if(contractType=='PURCHASE' && !supplierName) {
+              kendo.ui.showErrorDialog({
+                    message: '收方为必输！'
+                })
+        }else if(contractType=='SALE'&& !customerName) {
+
+                kendo.ui.showErrorDialog({
+                    message: '付方为必输！'
+                })
+
+        }else if (!contractCode) {
+            kendo.ui.showErrorDialog({
+                message: '合同号为必输！'
+            })
+        } else if (!contractName) {
+            kendo.ui.showErrorDialog({
+                message: '合同名称为必输！'
+            })
+        } else if (!orgName) {
+            kendo.ui.showErrorDialog({
+                message: '合同签订组织为必输！'
+            });
+        } else if (!contractType) {
+            kendo.ui.showErrorDialog({
+                message: '协议类型为必输！'
+            });
+        } 
+        // else if (!personName) {
+        //     kendo.ui.showErrorDialog({
+        //         message: '合同跟进人为必输！'
+        //     });
+        // } 
+        else if (!isValid) {
+            kendo.ui.showErrorDialog({
+                message: '请在正确的范围内输入或选择是否有效值！'
+            });
+        }else if (contractType=='PURCHASE' && !installmentType) {
+            kendo.ui.showErrorDialog({
+                message: '分期标识为必输！'
+            });
+        }else if (contractType=='PURCHASE' && !totalContractAmount) {
+            kendo.ui.showErrorDialog({
+                message: '账单金额必输！'
+            });
+        } else if(!remark){
+            kendo.ui.showErrorDialog({
+                message: '备注为必输！'
+            });
+        } else{
+            var dto = {};
+
+            dto.id = viewModel.model.id;
+            dto.contractCode = viewModel.model.contractCode;
+            dto.contractName = viewModel.model.contractName;
+            dto.orgMcode = viewModel.model.orgMcode;
+            dto.contractType = viewModel.model.contractType;
+            dto.effectiveDate = viewModel.model.effectiveDate;
+            dto.expiredDate = viewModel.model.expiredDate;
+            dto.authorizerMcode = viewModel.model.authorizerMcode;
+            dto.isValid = viewModel.model.isValid;
+            dto.beAuthType = viewModel.model.beAuthType;
+            dto.beAuthObjectMcode = viewModel.model.beAuthObjectMcode;
+            dto.payer = viewModel.model.payer;
+            dto.remark = viewModel.model.remark;
+            dto.receiver = viewModel.model.receiver;
+            dto.installmentType = viewModel.model.installmentType;
+            dto.totalContractAmount = viewModel.model.totalContractAmount;
+            dto.bankDeposit  = viewModel.model.bankDeposit;
+            dto.bankAccounts = viewModel.model.bankAccounts;
+            dto.empCode = viewModel.model.empCode;
+            dto.personCode = viewModel.model.personCode;
+            var dataSource = $("#Grid").data("kendoGrid").dataSource.data();
+            dto.mContractAuthList = dataSource;
+
+
+            $.ajax({
+                type: "POST",
+                url: "${base.contextPath}/t/m/contract/updateContractArchivesAuth",
+                data: JSON.stringify(dto),
+                //dataType: "json",
+                contentType: "application/json",
+                async: false,
+                success: function (data) {
+                    if (data.success) {
+                        kendo.ui.showInfoDialog({
+                            message: '更新成功！'
+                        }).done(function (e) {
+                            if (e.button == "OK") {
+                                var mainTab = window.top.$("#mainTab").data("kendoTabStrip");
+                                var idx = jQuery.inArray(_currentSystemCode + '__CONTRACT_ARCHIVES', mainTab.tabids);
+                                var home = mainTab.contentElements[idx];
+                                if (home) {
+                                    var iframe = $(home).find('iframe')[0];
+                                    iframe.contentWindow.dataSource.read();
+                                }
+                                window.top.closeTab('contract_detail' + viewModel.model.id, '合同档案编辑', "${base.contextPath}/common/contract_detail.html?businessKey=" + viewModel.model.id + "&editable=true");
+                            }
+                        })
+                    } else {
+                        kendo.ui.showErrorDialog({
+                            message: data.message
+                        })
+                    }
+                }
+            });
+        }
+        Hap.unblockUI();
+    }
+    function createGrid() {
+        var grid = $("#grid").data("kendoGrid");
+        grid.addRow();
+    }
+    $("#applyDateFrom").kendoDatePicker({
+        format: "yyyy-MM-dd",
+        change: function() {
+            var value = this.value();
+            $("#applyDateTo").data("kendoDatePicker").setOptions({
+                min: value
+            });
+        }
+    });
+    $("#applyDateTo").kendoDatePicker({
+        format: "yyyy-MM-dd",
+        change: function() {
+            var value = this.value();
+            $("#applyDateFrom").data("kendoDatePicker").setOptions({
+                max: value
+            });
+        }
+    });
+    $("#isValid").kendoComboBox({
+        dataSource: [
+            { value: "Y", label: "有效" },
+            { value: "N", label: "无效" }
+        ],
+        dataTextField: "label",
+        dataValueField: "value",
+        valuePrimitive: true
+    });
+    if(viewModel.model.editable=="true") {
+        $("#applyDate").attr('disabled', true);
+        $("#applyDate").css('background', '#EFEFEF');
+        $("#dataSourceVal").data('kendoLov').enable(false);
+        $("#contractType").data('kendoComboBox').enable(false);
+        $("#supplier").data('kendoLov').enable(false);
+        $("#pay").data('kendoLov').enable(false);
+        $("#personName").data('kendoLov').enable(false);
+        $("#applyDateFrom").data('kendoDatePicker').enable(false);
+        $("#applyDateTo").data('kendoDatePicker').enable(false);
+        $("#isValid").data('kendoComboBox').enable(false);
+        $("#installmentType").data('kendoComboBox').enable(false);
+        $("#totalContractAmount").data('kendoNumericTextBox').enable(false);
+        $("#businessTripReason").data('kendoTextArea').enable(false);
+        $("#addEditButton2").hide();
+
+    }
+
+    // Lcp.gridToolTip("#cpsGrid", 7);
+    // Lcp.gridToolTip("#cpsGrid", 8);
+    // Lcp.gridToolTip("#cpsGrid", 9);
+    // Lcp.gridToolTip("#cpsGrid", 10);
+    // Lcp.gridToolTip("#cspfGrid", 7);
+    // Lcp.gridToolTip("#safGrid", 3);
+    // Lcp.gridToolTip("#safGrid", 4);
+    // Lcp.gridToolTip("#safGrid", 6);
+    
+    // var cpsGridList = new kendo.data.DataSource({
+    //     transport: {
+    //         read: {
+    //             url: "${base.contextPath}/t/m/contract/payment/plan/queryDetail/" + viewModel.model.contractCode,
+    //             type: "GET",
+    //             dataType: "json"
+    //         },
+    //         parameterMap: function (options, type) {
+    //             if (type !== "read" && options.models) {
+    //                 var datas = Hap.prepareSubmitParameter(options, type)
+    //                 return kendo.stringify(datas);
+    //             } else if (type === "read") {
+    //                 return Hap.prepareQueryParameter({}, options)
+    //             }
+    //         }
+    //     },
+    //     batch: true,
+    //     serverPaging: true,
+    //     // pageSize: 20,
+    //     schema: {
+    //         data: 'rows',
+    //         total: 'total',
+    //         model: {
+    //             id: "id",
+    //             fields: {}
+    //         }
+    //     }
+    // });
+
+    // $("#cpsGrid").kendoGrid({
+    //     dataSource: cpsGridList,
+    //     rownumber: true,
+    //     resizable: true,
+    //     scrollable: true,
+    //     navigatable: false,
+    //     // selectable: 'multiple, rowbox',
+    //     dataBound: function () {
+    //         if (parent.autoResizeIframe) {
+    //             parent.autoResizeIframe('${RequestParameters.functionCode!}')
+    //         }
+    //         // $(".k-grid-header colgroup").children().eq(0).width("40px");
+    //         // $(".k-grid-content colgroup").children().eq(0).width("40px");
+    //         // $("#grid th").eq(0).text("序号");
+    //     },
+    //     // pageable: {
+    //     //     pageSizes: [5, 10, 20, 50],
+    //     //     refresh: true,
+    //     //     buttonCount: 5
+    //     // },
+    //     columns: [
+    //         {
+    //             field: "contractCode",
+    //             title: '合同号',
+    //             width: 110,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "paymentDate",
+    //             title: '付款日期',
+    //             width: 100,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //             template:function (dataItem) {
+    //                 return formatDate(dataItem.paymentDate)
+    //             }
+    //         },
+    //         {
+    //             field: "category",
+    //             title: '款项类别',
+    //             width: 100,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "amount",
+    //             title: '含税付款金额',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: right;"
+    //             },
+    //             format: "{0:n2}",
+    //         },
+    //         {
+    //             field: "freeAmount",
+    //             title: '不含税付款金额',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: right;"
+    //             },
+    //             format: "{0:n2}",
+    //         },
+    //         {
+    //             field: "ratio",
+    //             title: '付款比例',
+    //             width: 80,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "payer",
+    //             title: '付款方',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "payee",
+    //             title: '收款方',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "supplierName",
+    //             title: '供应商名称',
+    //             width: 140,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "remark",
+    //             title: '备注',
+    //             width: 100,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //     ],
+    // editable: false
+    // });
+    
+    // var cspfGridList = new kendo.data.DataSource({
+    //     transport: {
+    //         read: {
+    //             url: "${base.contextPath}/t/m/contract/ladder/payment/queryDetail/" + viewModel.model.contractCode,
+    //             type: "GET",
+    //             dataType: "json"
+    //         },
+    //         parameterMap: function (options, type) {
+    //             if (type !== "read" && options.models) {
+    //                 var datas = Hap.prepareSubmitParameter(options, type)
+    //                 return kendo.stringify(datas);
+    //             } else if (type === "read") {
+    //                 return Hap.prepareQueryParameter({}, options)
+    //             }
+    //         }
+    //     },
+    //     batch: true,
+    //     serverPaging: true,
+    //     // pageSize: 20,
+    //     schema: {
+    //         data: 'rows',
+    //         total: 'total',
+    //         model: {
+    //             id: "id",
+    //             fields: {}
+    //         }
+    //     }
+    // });
+
+    // $("#cspfGrid").kendoGrid({
+    //     dataSource: cspfGridList,
+    //     rownumber: true,
+    //     resizable: true,
+    //     scrollable: true,
+    //     navigatable: false,
+    //     // selectable: 'multiple, rowbox',
+    //     dataBound: function () {
+    //         if (parent.autoResizeIframe) {
+    //             parent.autoResizeIframe('${RequestParameters.functionCode!}')
+    //         }
+    //         // $(".k-grid-header colgroup").children().eq(0).width("40px");
+    //         // $(".k-grid-content colgroup").children().eq(0).width("40px");
+    //         // $("#grid th").eq(0).text("序号");
+    //     },
+    //     // pageable: {
+    //     //     pageSizes: [5, 10, 20, 50],
+    //     //     refresh: true,
+    //     //     buttonCount: 5
+    //     // },
+    //     columns: [
+    //         {
+    //             field: "contractCode",
+    //             title: '合同号',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "minPrice",
+    //             title: '订单价格下限(不含)万元',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: right;"
+    //             },
+    //             format: "{0:n4}",
+    //         },
+    //         {
+    //             field: "maxPrice",
+    //             title: '订单价格上限(含)万元',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: right;"
+    //             },
+    //             format: "{0:n4}",
+    //         },
+    //         {
+    //             field: "prepaymentRatio",
+    //             title: '预付款比例(%)',
+    //             width: 70,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "acceptanceRatio",
+    //             title: '验收款比例(%)',
+    //             width: 160,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "warrantyRatio",
+    //             title: '质保金比例(%)',
+    //             width: 140,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "remark",
+    //             title: '备注',
+    //             width: 100,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //     ],
+    // editable: false
+    // });
+    
+    // var safGridList = new kendo.data.DataSource({
+    //     transport: {
+    //         read: {
+    //             url: "${base.contextPath}/t/m/contract/supplement/pact/queryDetail/" + viewModel.model.contractCode,
+    //             type: "GET",
+    //             dataType: "json"
+    //         },
+    //         parameterMap: function (options, type) {
+    //             if (type !== "read" && options.models) {
+    //                 var datas = Hap.prepareSubmitParameter(options, type)
+    //                 return kendo.stringify(datas);
+    //             } else if (type === "read") {
+    //                 return Hap.prepareQueryParameter({}, options)
+    //             }
+    //         }
+    //     },
+    //     batch: true,
+    //     serverPaging: true,
+    //     // pageSize: 20,
+    //     schema: {
+    //         data: 'rows',
+    //         total: 'total',
+    //         model: {
+    //             id: "id",
+    //             fields: {}
+    //         }
+    //     }
+    // });
+
+    // $("#safGrid").kendoGrid({
+    //     dataSource: safGridList,
+    //     rownumber: true,
+    //     resizable: true,
+    //     scrollable: true,
+    //     navigatable: false,
+    //     // selectable: 'multiple, rowbox',
+    //     dataBound: function () {
+    //         if (parent.autoResizeIframe) {
+    //             parent.autoResizeIframe('${RequestParameters.functionCode!}')
+    //         }
+    //         // $(".k-grid-header colgroup").children().eq(0).width("40px");
+    //         // $(".k-grid-content colgroup").children().eq(0).width("40px");
+    //         // $("#grid th").eq(0).text("序号");
+    //     },
+    //     // pageable: {
+    //     //     pageSizes: [5, 10, 20, 50],
+    //     //     refresh: true,
+    //     //     buttonCount: 5
+    //     // },
+    //     columns: [
+    //         {
+    //             field: "contractCode",
+    //             title: '合同号',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "purchaseCode",
+    //             title: '请购单号',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "supplierName",
+    //             title: '供应商名称',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "contractNumber",
+    //             title: '补充协议合同单号',
+    //             width: 70,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "status",
+    //             title: '状态',
+    //             width: 60,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //             template: function (rowdata) {
+    //                 if(rowdata.status) {
+    //                     return rowdata.status == '1' ? '原始' : '新加'
+    //                 }
+    //                 return ''
+    //             },
+    //         },
+    //         {
+    //             field: "remark",
+    //             title: '备注',
+    //             width: 100,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //     ],
+    // editable: false
+    // });
+
+    // var locoGridList = new kendo.data.DataSource({
+    //     transport: {
+    //         read: {
+    //             url: "${base.contextPath}/t/m/contract/subject/matter/queryDetail/" + viewModel.model.contractCode,
+    //             type: "GET",
+    //             dataType: "json"
+    //         },
+    //         parameterMap: function (options, type) {
+    //             if (type !== "read" && options.models) {
+    //                 var datas = Hap.prepareSubmitParameter(options, type)
+    //                 return kendo.stringify(datas);
+    //             } else if (type === "read") {
+    //                 return Hap.prepareQueryParameter({}, options)
+    //             }
+    //         }
+    //     },
+    //     batch: true,
+    //     serverPaging: true,
+    //     // pageSize: 20,
+    //     schema: {
+    //         data: 'rows',
+    //         total: 'total',
+    //         model: {
+    //             id: "id",
+    //             fields: {}
+    //         }
+    //     }
+    // });
+
+    // $("#locoGrid").kendoGrid({
+    //     dataSource: locoGridList,
+    //     rownumber: true,
+    //     resizable: true,
+    //     scrollable: true,
+    //     navigatable: false,
+    //     // selectable: 'multiple, rowbox',
+    //     dataBound: function () {
+    //         if (parent.autoResizeIframe) {
+    //             parent.autoResizeIframe('${RequestParameters.functionCode!}')
+    //         }
+    //         // $(".k-grid-header colgroup").children().eq(0).width("40px");
+    //         // $(".k-grid-content colgroup").children().eq(0).width("40px");
+    //         // $("#grid th").eq(0).text("序号");
+    //     },
+    //     // pageable: {
+    //     //     pageSizes: [5, 10, 20, 50],
+    //     //     refresh: true,
+    //     //     buttonCount: 5
+    //     // },
+    //     columns: [
+    //         {
+    //             field: "contractCode",
+    //             title: '合同号',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "priceName",
+    //             title: '价格名称',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "billingMethod",
+    //             title: '结算方式',
+    //             width: 120,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "taxExclusivePrice",
+    //             title: '不含税单价',
+    //             width: 70,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: right;"
+    //             },
+    //             format: "{0:n2}",
+    //         },
+    //         {
+    //             field: "taxRate",
+    //             title: '税率',
+    //             width: 60,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "taxIncludedPrice",
+    //             title: '含税单价',
+    //             width: 80,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: right;"
+    //             },
+    //             format: "{0:n2}",
+    //         },
+    //         {
+    //             field: "unit",
+    //             title: '计量单位',
+    //             width: 80,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "stepPriceType",
+    //             title: '阶梯价格类型',
+    //             width: 100,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "lowerLimit",
+    //             title: '区间下限（含）',
+    //             width: 100,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+    //         {
+    //             field: "upperLimit",
+    //             title: '区间上限（不含）',
+    //             width: 100,
+    //             headerAttributes: {
+    //                 style: "text-align: center"
+    //             },
+    //             attributes: {
+    //                 "class": "table-header-cell",
+    //                 style: "text-align: center;"
+    //             },
+    //         },
+           
+    //     ],
+    // editable: false
+    // });
+
+    
+</script>
+<script type="text/javascript">
+    var mydate = new Date();
+    //根据时间来自动生成uuid
+    var tempKey = (""+mydate.getDay() + mydate.getHours() + mydate.getMinutes() + mydate.getSeconds() + mydate.getMilliseconds());
+    viewModel.model.set('tempKey', tempKey);
+    //是否显示上传、删除按钮 true(显示) false(隐藏)
+    var showImportBtn = true;
+    //如果是查看明细的，需要隐藏
+    if(viewModel.model.editable=="true"){
+        showImportBtn = false;
+    }
+    //applyId是申请单主表的主键
+    function loadFileUrl() {
+        var url = "../upload/upload_img_show.html?tempKey=" + tempKey + '&uploadTypePrefix=CONTRACT_FILE&associationTableId='+viewModel.model.id+'&buttonShow='+showImportBtn;
+        $("#imageShow").load(url);
+    }
+    loadFileUrl();
+</script>
+</body>
+</html>
